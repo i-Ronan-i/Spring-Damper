@@ -1,16 +1,16 @@
-# try to make a plot of the "desired x" graph. 1000 time steps
-# 200 a piece? |----____----____----
-
+#importing stuff
 import pylab as pylab
 from pylab import plot,xlabel,ylabel,title,legend,figure,subplots
 from pylab import cos, pi, arange, sqrt, pi, array, array
 
-des_x = list()
+#setting time steps
 steps2 = 0.001
 t0 = 0
 tf = 1
 t = arange(t0, tf, steps2)
 
+#for setting the displacement values
+des_x = list()
 for i in range(0,200):
     des_x.append(10.0)
 for i in range(200,400):
@@ -22,6 +22,7 @@ for i in range(600,800) :
 for i in range(800,1000):
     des_x.append(10.0)
 
+#plotting stolen from main program just for visualisation.
 pylab.rcParams['figure.figsize'] = (10, 8)
 pylab.rcParams['font.size'] = 12
 
