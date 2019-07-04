@@ -13,7 +13,7 @@ def MassSpringDamper(state,t):
     '''
     k=spring constant, Newtons per metre
     m=mass, Kilograms
-    c=dampign coefficient, Newton*second / meter    
+    c=damping coefficient, Newton*second / meter    
     
     for a mass,spring
         xdd = ((-k*x)/m) + g
