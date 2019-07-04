@@ -48,8 +48,8 @@ def initialise():
         f = f+n
 
     # Step function in use
-    t1, y1 = 0,0 #signal.step(errorsig)
-    t2, y2 = signal.step(cltf, T=timesteps)
+    t1, y1 = signal.step(errorsig, T=times) #signal.step(errorsig)
+    t2, y2 = signal.step(cltf, T=times)
 
     # this is a workaround for calculating the error value without 
     # the proper step input function being used for error signal values.
