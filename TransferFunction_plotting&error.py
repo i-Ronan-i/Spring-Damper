@@ -32,6 +32,7 @@ def initialise():
     cltf_num = GHs_num
     cltf_den = GHs_den + GHs_num
     cltf = signal.TransferFunction(cltf_num, cltf_den)
+    print("Cltf: ",cltf)
     #Error signal is input - output = input(1 - GA*MSD)
     error_num = GHs_den - GHs_num
     error_den = GHs_den
