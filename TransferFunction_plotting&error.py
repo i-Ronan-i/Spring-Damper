@@ -10,14 +10,14 @@ import matplotlib.pyplot as plt
 def initialise():
     #first thing is to create the system itself - MSD, input
     #MSD state definitions
-    m = 1 # kg   - mass
+    m = 2 # kg   - mass
     c = 10 # Ns/m - damping coefficient
     k = 20 # N/m  - spring coefficient
     
     # PID initialising coefficients
     kd = 50 # derivative gain
-    kp = 350 # proportional gain
-    ki = 300 # integral gain
+    kp = 250 # proportional gain
+    ki = 200 # integral gain
 
     # Transfer function definitions
     MSDnum = [0, 0, 1]
@@ -26,6 +26,8 @@ def initialise():
     GAden = [0, 1, 0]
     GHs_num = signal.convolve(GAnum, MSDnum)
     GHs_den = signal.convolve(GAden, MSDden)
+    print("GHs_num: ", GHs_num)
+    print("GHs_den: ", GHs_den)
 
     cltf_num = GHs_num
     cltf_den = GHs_den + GHs_num
@@ -34,46 +36,49 @@ def initialise():
     error_num = GHs_den - GHs_num
     error_den = GHs_den
     errorsig = signal.TransferFunction(error_num, error_den)
-    print(errorsig)
+    print("Error_num: ", error_num)
+    print("error_den: ", error_den)
+    print("errorsig: ", errorsig)
     
     #Creating timestep table for step functions
     times=[]
     stepplot=[]
     f=0.000
     n = 0.001
-    timesteps = 2000
+    timesteps = 3000
     for s in range(timesteps):
         stepplot.append(1)
         times.append(f)
         f = f+n
 
+    unityF = signal.TransferFunction([1],[1])
     # Step function in use
-    t1, y1 = signal.step(errorsig, T=times) #signal.step(errorsig)
+    t1, y1 = signal.step(unityF, T=times) #signal.step(errorsig)
     t2, y2 = signal.step(cltf, T=times)
-
-    # this is a workaround for calculating the error value without 
-    # the proper step input function being used for error signal values.
-    """ err = []
-    for s in range(timesteps):
-        err.append(stepplot[s] - y2[s])
-
-    for s in range(timesteps-1):
-        err_val = err[s] + err[s+1]
-    err_val = err_val*err_val
     
-    print("Error value = ", err_val)
-    """
+    # This manipulates the unity step input function to produce the error plot via
+    # subtraction from the step function and also creates the error value.
+    errY = []
+    err_val = 0
+    for s in range(timesteps):
+        errY.append(y1[s] - y2[s])
+        err_val = err_val + errY[s]
+    err_valsq = err_val*err_val
+    print("Fitness Error value = ", err_valsq, "    Error value: ", err_val)
+    
     #Plotting graphs
     fig, ax1 = pylab.subplots()
-    ax1.plot(t1, y1,'g', linewidth=1.5)
+    ax1.plot(t1, errY,'g', linewidth=1.5)
     ax1.legend()
     ax1.set_xlabel('time (seconds)')
     ax1.set_ylabel('Error',color='g')
-    pylab.title('Plot')
+    pylab.title('Step Response and Error Signal')
     ax2 = ax1.twinx()
     ax2.set_ylabel('Amplitude',color='b')
     ax2.plot(t2, y2,'b', label = r'$x (mm)$', linewidth=1)
-    pylab.grid
+    ax1.axis([0, 3, 0, 1.2])
+    ax2.axis([0, 3, 0, 1.2])
+    pylab.grid()
     pylab.show()
 
 
