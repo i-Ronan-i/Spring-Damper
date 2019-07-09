@@ -11,6 +11,7 @@ import pylab as pylab
 from pylab import plot,xlabel,ylabel,title,legend,figure,subplots
 import matplotlib.pyplot as plt
 import random
+import time
 
 def create_initial(pop_num, pop):
     """Creates the initial population of the genetic algorithm"""
@@ -18,7 +19,7 @@ def create_initial(pop_num, pop):
         #Creating the random PID values
         kd_min, kd_max = 0, 100
         kp_min, kp_max = 0, 300
-        ki_min, ki_max = 0, 250
+        ki_min, ki_max = 0, 300
         kd_cur = round(random.uniform(kd_min, kd_max), 2)
         kp_cur = round(random.uniform(kp_min, kp_max), 2)
         ki_cur = round(random.uniform(ki_min, ki_max), 2)
@@ -26,12 +27,11 @@ def create_initial(pop_num, pop):
         pop.insert(s, [kd_cur, kp_cur, ki_cur])
     return pop
 
-
-def fitness(MSDnum, MSDden, pop_num, pop):
+def fitness(MSDnum, MSDden, pop, times):
     """Calculates the fitness values of each member in pop[population]
     Also sets the simulation time in timesteps."""
     fit_val = []
-    for s in range(pop_num):
+    for s in range(len(pop)):
         #Create transfer functions for use by inputting current pop
         GAnum = [pop[s][0], pop[s][1], pop[s][2]]   # kd, kp, ki 
         GAden = [0, 1, 0]
@@ -42,15 +42,6 @@ def fitness(MSDnum, MSDden, pop_num, pop):
         cltf_den = GHs_den + GHs_num
         cltf = signal.TransferFunction(cltf_num, cltf_den)
         
-        #Creating timestep table for step functions
-        times=[]
-        f=0.000
-        n = 0.001
-        timesteps = 3000
-        for p in range(timesteps):
-            times.append(f)
-            f = f+n
-
         #create transfer function with no poles or zeros
         unityF = signal.TransferFunction([1],[1])
         # Step functions
@@ -61,122 +52,115 @@ def fitness(MSDnum, MSDden, pop_num, pop):
         # addition to the error value.
         err_vall = 0.0
         err_val = 0.0
-        for o in range(timesteps):
+        for o in range(len(times)):
             # repeats every s repetition
-            err_vall = err_vall + y1[o] - y2[o]
+            err_vall = err_vall + abs(y1[o] - abs(y2[o]))
         err_val = err_vall * err_vall
         fit_val.insert(s, err_val)
-    for m in range(pop_num):
-        print("Fitness value for Pop Member ", m, " is :", fit_val[m])
     return fit_val
     
 def crossover(a, b):
     """Finding cut-points for crossover
     and joining the two parts of the two members
     of the population together. """
-    print("a: ", a)
-    print("b: ", b)
     new_a = []  #Clearing previous 
-    new_b = []  #list values
     cut_a = random.randint(1, len(a)-1) #Makes sure there is always a cut
-    cut_b = random.randint(1, len(b)-1) #Can only be at position 1 or 2.
-    print("Cut_a: ", cut_a, "    Cut_b: ", cut_b)
 
-    
     new_a1 = a[0 : cut_a]
     new_a2 = b[cut_a : len(b)]
-    print("New_a1: ", new_a1)
-    print("New_a2: ", new_a2)
 
-    new_b1 = b[0 : cut_b]
-    new_b2 = a[cut_b : len(a)]
-    print("New_b1: ", new_b1) 
-    print("New_b2: ", new_b2)     
-
-    #Creates the new crossed-over lists
+    #Creates the new crossed-over list
     new_a = new_a1 + new_a2
-    new_b = new_b1 + new_b2
-    print("New_a: ", new_a, "     New_b: ", new_b)
-    return new_a, new_b
+    return new_a
 
-def mutate(pop): 
+def mutate(pop, mut_prob): 
     """Takes current population member and add a probability chance
     that it mutates via a 50:50 chance that it is reduced or increased
     by 10%."""
-    mut_prob = 0.03
     pop_curr = pop
     for i in range(0, len(pop_curr)):
-        print("pop_curr[i]: ", pop_curr[i])
-        if random.random() < mut_prob:
-            if random.random() < 0.5:
-                pop_curr[i] = round(pop_curr[i] * 0.9, 2) #Maintains 2 d.p
-            else :
-                pop_curr[i] = round(pop_curr[i] * 1.1, 2) 
-        print("pop_curr[i]: ", pop_curr[i])
+        for o in range(3) :
+            if random.random() < mut_prob:
+                if random.random() < 0.5:
+                    pop_curr[i][o] = round(pop_curr[i][o] * 0.9, 2) #Maintains 2 d.p
+                else :
+                    pop_curr[i][o] = round(pop_curr[i][o] * 1.1, 2) 
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob):
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #This sorts the population into descending fitness
-    pop_new = []
     switches = 1
     while switches > 0:
         switches = 0
-        print("switches: ", switches)
         for i in range(len(fit_val)-1) :
             for j in range(i+1, len(fit_val)) : 
                 if fit_val[i] > fit_val[j] :
                     temp = fit_val[i]
-                    print("fit_val1[i]: ", fit_val[i])
                     fit_val[i] = fit_val[j]
                     fit_val[j] = temp
-                    print("fit_val1[i]: ", fit_val[i])
 
                     temp2 = pop[i]
-                    print("pop1[i]: ", pop[i])
                     pop[i] = pop[j]
                     pop[j] = temp2
-                    print("pop1[i]: ", pop[i])
 
                     switches = switches + 1        
     #Pop list is now sorted. 
 
     #Next:
-    #Saves top 5 performing genomes
-    pop_top5 = []
-    for m in range(5) :
-        pop_top5[m] = pop[m]
-    
+    #Saves top 1 performing genomes
+    pop_top = []
+    for m in range(1) :
+        pop_top.append(pop[m])
+
     #Crossover performed in top 20
-    pop_cross20 = []
-    for n in range(19):
-        new_pop1, new_pop2 = crossover(pop[n], pop[n+1])
-        pop_cross20.append(new_pop1)
-        pop_cross20.append(new_pop2)
-    
+    pop_cross = []
+    for n in range(20):
+        new_pop1 = crossover(pop[n], pop[n+1])
+        pop_cross.append(new_pop1)
+
     #Adds all currently available members
     #Then mutates them.
-    pop_new = pop_top5 + pop_cross20
-    print("pop_new atm: ", pop_new)
-    pop_new = mutate(pop_new)
+    pop_new = []
+    pop_premut = []
+    pop_premut = pop_top + pop_cross
+    pop_new = mutate(pop_premut, mut_prob)
 
-    #Create 15 random and save in pop[25] -> pop[40]
-    for s in range(15):
+    #Create random members and saves
+    for s in range(pop_num - len(pop_new)):
         #Creating the random PID values
         kd_min, kd_max = 0, 100
         kp_min, kp_max = 0, 300
-        ki_min, ki_max = 0, 250
+        ki_min, ki_max = 0, 300
         kd_cur = round(random.uniform(kd_min, kd_max), 2)
         kp_cur = round(random.uniform(kp_min, kp_max), 2)
         ki_cur = round(random.uniform(ki_min, ki_max), 2)
         #Into 2-D List. Access via pop[i][j]
         pop_new.append([kd_cur, kp_cur, ki_cur])
-    print("pop_new: ", pop_new)
-    print("pop_new length: ", len(pop_new))
-
     return pop_new
 
+def fit_sort(pop, fit_val):
+    #This sorts the population into descending fitness (ascending order)
+    switches = 1
+    while switches > 0:
+        switches = 0
+        for i in range(len(fit_val)-1) :
+            for j in range(i+1, len(fit_val)) : 
+                if fit_val[i] > fit_val[j] :
+                    temp = fit_val[i]
+                    fit_val[i] = fit_val[j]
+                    fit_val[j] = temp
+
+                    temp2 = pop[i]
+                    pop[i] = pop[j]
+                    pop[j] = temp2
+
+                    switches = switches + 1        
+    #Pop list is now sorted. 
+    return pop, fit_val
+
 def main():
+    start_time = time.time()
     #first thing is to create the system itself - MSD, input
     #MSD state definitions
     m = 2 # kg   - mass
@@ -186,48 +170,86 @@ def main():
     # Transfer function definitions
     MSDnum = [0, 0, 1]
     MSDden = [m, c, k]
-    pop_num = 40
+    pop_num = 40    #How large the initial population is
     pop = []
+    mut_prob = 0.05  #probability for mutation set here
+    timesteps = 8000 #Simulation length set here
+    iteration_max = 30 #Total number of iterations and generations set here
 
+    #Creating timestep table for step functions
+    times=[]
+    f=0.000
+    n = 0.001
+    for p in range(timesteps):
+        times.append(f)
+        f = f+n
+
+    #Main GA call stack
     iteration = 0
-    while iteration < 100:
-        print(iteration)
+    while iteration < iteration_max:
         if iteration == 0:
             pop = create_initial(pop_num, pop)
-            fit_val = fitness(MSDnum, MSDden, pop_num, pop)
+            fit_val = fitness(MSDnum, MSDden, pop, times)
             iteration = iteration + 1
 
-        if iteration < 100:
+        if iteration < iteration_max and iteration > 0:
             pop = create_next_generation(pop, pop_num, fit_val, mut_prob)
-            fit_val = fitness(MSDnum, MSDden, pop_num, pop)
+            fit_val = fitness(MSDnum, MSDden, pop, times)
             iteration = iteration + 1
-        else:
-            winning_pop()
-            """Plotting graphs
-            fig, ax1 = pylab.subplots()
-            ax1.plot(t1, errY,'g', linewidth=1.5)
-            ax1.legend()
-            ax1.set_xlabel('time (seconds)')
-            ax1.set_ylabel('Error',color='g')
-            pylab.title('Step Response and Error Signal')
-            ax2 = ax1.twinx()
-            ax2.set_ylabel('Amplitude',color='b')
-            ax2.plot(t2, y2,'b', label = r'$x (mm)$', linewidth=1)
-            ax1.axis([0, 3, 0, 1.2])
-            ax2.axis([0, 3, 0, 1.2])
-            pylab.grid()
-            pylab.show()"""
+    
+    """This is the final section with the top solution being chosen and used"""
+    #Final simulation run
+    fit_val = fitness(MSDnum, MSDden, pop, times)
+    pop, fit_val = fit_sort(pop, fit_val)
+    print("Top overall Coefficients: kd = ", pop[0][0], "  kp = ", pop[0][1], "  ki = ", pop[0][2])
+    print("Fitness value of top performing member: ", fit_val[0])
+
+    #Create transfer functions for use by inputting current pop
+    GAnum = [pop[0][0], pop[0][1], pop[0][2]]   # kd, kp, ki 
+    GAden = [0, 1, 0]
+    GHs_num = signal.convolve(GAnum, MSDnum)
+    GHs_den = signal.convolve(GAden, MSDden)
+    
+    #Create CLTF
+    cltf_num = GHs_num
+    cltf_den = GHs_den + GHs_num
+    cltf = signal.TransferFunction(cltf_num, cltf_den)
+
+    #create transfer function with no poles or zeros
+    unityF = signal.TransferFunction([1],[1])
+    # Step functions
+    t1, y1 = signal.step(unityF, T=times)
+    t2, y2 = signal.step(cltf, T=times)
+
+    #Creating the error signal
+    y3 = []
+    for g in range(timesteps):
+        y3.append(y1[g] - y2[g])
+
+    print("Time elapsed: ", time.time()-start_time)
+    #Plotting graphs
+    fig = plt.figure()
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+
+    ax1.title.set_text("Step Response")
+    ax1.set_xlabel("Time(s)")
+    ax1.set_ylabel("Amplitude (mm)")
+
+    ax2.title.set_text("Error Signal")
+    ax2.set_xlabel("Time(s)")
+    ax2.set_ylabel("Error (mm)")
+
+    ax2.plot(t1, y3, 'r', label='Error')
+    ax1.plot(t2, y2, 'g', label='Amplitude (mm)')
+    ax1.legend()
+    ax2.legend()
+    ax1.grid()
+    ax2.grid()
+    plt.show()
+
 
     return True
 
-def winning_pop():
-    return 1
 
-
-#mut_prob = 0.03 #3% chance of mutation
-#mutate(pop_curr, mut_prob)
-
-pop = [[153, 246, 156], [294, 42, 62], [72, 28, 993], [156, 79, 237], [281, 35, 644]]
-fit_val = [12, 15, 63, 67, 73]
-
-create_next_generation(pop, 5, fit_val, 1)
+main()
