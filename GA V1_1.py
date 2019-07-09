@@ -104,7 +104,7 @@ def mutate(pop):
     that it mutates via a 50:50 chance that it is reduced or increased
     by 10%."""
     mut_prob = 0.03
-    mut_pop = pop
+    pop_curr = pop
     for i in range(0, len(pop_curr)):
         print("pop_curr[i]: ", pop_curr[i])
         if random.random() < mut_prob:
@@ -118,6 +118,7 @@ def mutate(pop):
 def create_next_generation(pop, pop_num, fit_val, mut_prob):
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #This sorts the population into descending fitness
+    pop_new = []
     switches = 1
     while switches > 0:
         switches = 0
@@ -141,12 +142,37 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob):
     #Pop list is now sorted. 
 
     #Next:
-    #Save top 5 aside
-    #Use crossover in top 20 and save over initial 20 - will require another loop that sends pop[i] & pop[i+1] till pop[19]
-    #Add 5 back in, mutate 25 of pop
+    #Saves top 5 performing genomes
+    pop_top5 = []
+    for m in range(5) :
+        pop_top5[m] = pop[m]
+    
+    #Crossover performed in top 20
+    pop_cross20 = []
+    for n in range(19):
+        new_pop1, new_pop2 = crossover(pop[n], pop[n+1])
+        pop_cross20.append(new_pop1)
+        pop_cross20.append(new_pop2)
+    
+    #Adds all currently available members
+    #Then mutates them.
+    pop_new = pop_top5 + pop_cross20
+    print("pop_new atm: ", pop_new)
+    pop_new = mutate(pop_new)
+
     #Create 15 random and save in pop[25] -> pop[40]
-
-
+    for s in range(15):
+        #Creating the random PID values
+        kd_min, kd_max = 0, 100
+        kp_min, kp_max = 0, 300
+        ki_min, ki_max = 0, 250
+        kd_cur = round(random.uniform(kd_min, kd_max), 2)
+        kp_cur = round(random.uniform(kp_min, kp_max), 2)
+        ki_cur = round(random.uniform(ki_min, ki_max), 2)
+        #Into 2-D List. Access via pop[i][j]
+        pop_new.append([kd_cur, kp_cur, ki_cur])
+    print("pop_new: ", pop_new)
+    print("pop_new length: ", len(pop_new))
 
     return pop_new
 
@@ -200,3 +226,8 @@ def winning_pop():
 
 #mut_prob = 0.03 #3% chance of mutation
 #mutate(pop_curr, mut_prob)
+
+pop = [[153, 246, 156], [294, 42, 62], [72, 28, 993], [156, 79, 237], [281, 35, 644]]
+fit_val = [12, 15, 63, 67, 73]
+
+create_next_generation(pop, 5, fit_val, 1)
