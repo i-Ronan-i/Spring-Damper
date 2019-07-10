@@ -19,7 +19,7 @@ def create_initial(pop_num, pop):
         #Creating the random PID values
         kd_min, kd_max = 0, 100
         kp_min, kp_max = 0, 300
-        ki_min, ki_max = 0, 300
+        ki_min, ki_max = 0, 400
         kd_cur = round(random.uniform(kd_min, kd_max), 2)
         kp_cur = round(random.uniform(kp_min, kp_max), 2)
         ki_cur = round(random.uniform(ki_min, ki_max), 2)
@@ -131,7 +131,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob):
         #Creating the random PID values
         kd_min, kd_max = 0, 100
         kp_min, kp_max = 0, 300
-        ki_min, ki_max = 0, 300
+        ki_min, ki_max = 0, 400
         kd_cur = round(random.uniform(kd_min, kd_max), 2)
         kp_cur = round(random.uniform(kp_min, kp_max), 2)
         ki_cur = round(random.uniform(ki_min, ki_max), 2)
@@ -168,13 +168,14 @@ def main():
     k = 20 # N/m  - spring coefficient
 
     # Transfer function definitions
+    #step_mag = 1    #Magnitude of the step function - manupulation of functions, not actual step function
     MSDnum = [0, 0, 1]
     MSDden = [m, c, k]
     pop_num = 40    #How large the initial population is
     pop = []
     mut_prob = 0.05  #probability for mutation set here
-    timesteps = 8000 #Simulation length set here
-    iteration_max = 30 #Total number of iterations and generations set here
+    timesteps = 4000 #Simulation length set here
+    iteration_max = 1 #Total number of iterations and generations set here
 
     #Creating timestep table for step functions
     times=[]
