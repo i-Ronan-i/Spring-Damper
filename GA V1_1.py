@@ -175,7 +175,7 @@ def main():
     pop = []
     mut_prob = 0.05  #probability for mutation set here
     timesteps = 4000 #Simulation length set here
-    iteration_max = 1 #Total number of iterations and generations set here
+    iteration_max = 50 #Total number of iterations and generations set here
 
     #Creating timestep table for step functions
     times=[]
