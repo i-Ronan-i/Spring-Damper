@@ -78,7 +78,7 @@ def mutate(pop, mut_prob):
     by 10%."""
     pop_curr = pop
     for i in range(0, len(pop_curr)):
-        for o in range(3) :
+        for o in range(len(pop_curr[i])) :
             if random.random() < mut_prob:
                 if random.random() < 0.5:
                     pop_curr[i][o] = round(pop_curr[i][o] * 0.9, 2) #Maintains 2 d.p
@@ -182,7 +182,7 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
     #for previous fitness values  
     
     #This is setting the recognition level tolerance for changing the controller
-    if rec_val > 0.05 and time_curr - log_time >= 0.08:
+    if rec_val > 0.1 and time_curr - log_time >= 0.08:
         y_global = y_temp.copy()       
         changes = changes + 1
         logged_time.append(time_steps.copy())
@@ -220,7 +220,7 @@ def initialise():
     for c in range(0) :
         desired_x.append(0)
     for d in range(150) :
-        desired_x.append(4)
+        desired_x.append(5)
     for e in range(151) :
         desired_x.append(3)
 
@@ -269,50 +269,19 @@ while time_curr < 10 :
             fit_val = Fitness(MSDnum, MSDden, pop, time_steps, desired_x, y_global, logged_time)
             pop, fit_val = Fit_sort(pop, fit_val)
 
+
 print("Number of controller changes: ", changes)
 print("Top genome: kd ", pop[0][0], "  kp ", pop[0][1], "  ki ", pop[0][2])
-fig = plt.figure()
-plt.title("Output Signal")
-plt.plot(time_steps, y_global, 'g', label='Amplitude (mm)')
+
+plt.plot(time_steps, desired_x, label = "Desired Output - X_d(s)")
+plt.plot(time_steps, y_global, label = "System Output - X(s)") 
+plt.xlabel('Time (s)')
+# Set the y axis label of the current axis.
+plt.ylabel('Amplitude')
+# Set a title of the current axes.
+plt.title('System Response to Varying Step Inputs')
+# show a legend on the plot
 plt.legend()
+# Display a figure.
 plt.grid()
 plt.show()
-"""
-#TRYING TO FAKE THE DISTURBANCE BEING DETECTED, SIMULATE IN TIME STEPS UNTIL A POINT, AND ADD THIS GRAPH AS A GLOBAL_Y VALUE
-while x == False :
-    x = False
-    t_out, y_out, state, desired_x_curr = [], [], [], [] 
-    a = round(a+0.04, 2)
-    time_steps.append(a)  
-
-    for b in range(len(time_steps)) :
-        desired_x_curr.append(desired_x[b]) 
-
-    t_out, y_out, state = signal.lsim(cltf, U=desired_x_curr, T=time_steps)
-
-    if len(time_steps) == 50 :
-        changes = changes + 1
-        logged_time.append(time_steps.copy())
-        for y in range(len(logged_time[changes-1]), len(logged_time[changes])) :
-            y_global.insert(y, y_out[y])      
-
-    if len(time_steps) == 30 :
-        changes = changes + 1
-        logged_time.append(time_steps.copy())
-        for y in range(len(logged_time[changes-1]), len(logged_time[changes])) :
-            y_global.insert(y, y_out[y])
-
-
-
-        fig = plt.figure()
-        plt.title("Output Signal")
-        plt.plot(t_out, y_global, 'g', label='Amplitude (mm)')
-        plt.legend()
-        plt.grid()
-        plt.show()
-
-
-    if len(time_steps) == 250 :
-        x = True
-"""
-
