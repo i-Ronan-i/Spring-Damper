@@ -30,12 +30,12 @@ def Create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #Saves top 1 performing genomes
     pop_top = []
-    for m in range(3) :
+    for m in range(5) :
         pop_top.append(pop[m])
 
     #Crossover performed in top 20
     pop_cross = []
-    for n in range(20):
+    for n in range(30):
         new_pop1 = crossover(pop[n], pop[n+1])
         pop_cross.append(new_pop1)
 
@@ -168,7 +168,6 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
     t_out, y_out, state = signal.lsim(cltf, U=desired_x_curr, T=time_steps)
 
     rec_val = 0.0
-    prev_rec_val = 0.0
     err_vall = 0.0
     #CURRENTLY THE WAY TO DETECT THE LAST 4 REAL Y OUTPUTS ON THE GLOBAL
     #Y OUTPUT. Y TEMP = Y GLOBAL + Y OUT IN LATEST STEPS MADE SINCE LAST CHANGE
@@ -182,7 +181,7 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
     #for previous fitness values  
     
     #This is setting the recognition level tolerance for changing the controller
-    if rec_val > 0.1 and time_curr - log_time >= 0.08:
+    if rec_val > 0.000 and time_curr-log_time >= 0.08:
         y_global = y_temp.copy()       
         changes = changes + 1
         logged_time.append(time_steps.copy())
@@ -196,10 +195,10 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
 
 def GA_controller(time_steps, pop, fit_val):
     """Creates the generations, fitness has been moved to another function"""
-    pop_num = 50
-    mut_prob = 0.05
+    pop_num = 80
+    mut_prob = 0.03
     kd_min, kd_max = 0, 100
-    kp_min, kp_max = 0, 300
+    kp_min, kp_max = 0, 400
     ki_min, ki_max = 0, 400
 
     if len(time_steps) == 1 :
@@ -253,6 +252,18 @@ while time_curr < 10 :
     time_steps.append(a) 
     time_curr = round(time_curr + dt, 2)
     
+    if time_curr == 3.4 :
+        m = 2
+        c = 30 # Damper gets damaged
+        k = 20
+        MSDden = [m, c, k]
+    
+    if time_curr == 6.9 :
+        m = 2
+        c = 40 #Damper damage increases
+        k = 5 #Spring gets damaged
+        MSDden = [m, c, k]
+
     if time_curr == 0 :
         pop = GA_controller(time_steps, pop, fit_val) #It is currently expected that on start-up performance will be awful
         #run through output sim
