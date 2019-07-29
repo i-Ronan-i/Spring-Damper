@@ -112,9 +112,13 @@ def Fitness(MSDnum, MSDden, pop, time_steps, desired_x, y_global, logged_time):
     """Calculates the fitness values of each member in pop[population]"""
     fit_val = []
     desired_x_curr = []
-    #Creates array of desired_x for the current timesteps
+    #Creates array of desired_x for the current timesteps - Tries to follow the current output plot then adds the desired_x values at  the end 
+    #for b in range(len(logged_time[changes])) :
+    #    desired_x_curr.append(y_global[b])
+    #for b in range(len(logged_time[changes]), len(time_steps)) :
+    #    desired_x_curr.append(desired_x[b]) 
     for b in range(len(time_steps)) :
-        desired_x_curr.append(desired_x[b]) 
+        desired_x_curr.append(desired_x[b])
     
     for s in range(len(pop)):
         #Create transfer functions for use by inputting current pop
@@ -135,7 +139,7 @@ def Fitness(MSDnum, MSDden, pop, time_steps, desired_x, y_global, logged_time):
         #Y OUTPUT. Y TEMP = Y GLOBAL + Y OUT IN LATEST STEPS MADE SINCE LAST CHANGE
         y_temp = []
         y_temp = y_global.copy()
-        for y in range(len(logged_time[changes]), len(time_steps)) :
+        for y in range(len(logged_time[changes-1]), len(time_steps)) : #changes - 1 because it increments just before this part of the code
             y_temp.insert(y, y_out[y]) 
         #sets the tolerance for error in the last 4 time steps
         for y in range(len(time_steps)-4, len(time_steps)) :
@@ -163,31 +167,37 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
     cltf = signal.TransferFunction(cltf_num, cltf_den)
 
     #Creates array of desired_x for the current timesteps
-    for b in range(len(time_steps)) :
+    #This starts with the previous signal path then adds the next desired x values to aim for
+    for b in range(len(logged_time[changes])) :
+        desired_x_curr.append(y_global[b])
+    for b in range(len(logged_time[changes]), len(time_steps)) :
         desired_x_curr.append(desired_x[b]) 
+   
+    #Simulates the current top performing system.
     t_out, y_out, state = signal.lsim(cltf, U=desired_x_curr, T=time_steps)
 
     rec_val = 0.0
     err_vall = 0.0
-    #CURRENTLY THE WAY TO DETECT THE LAST 4 REAL Y OUTPUTS ON THE GLOBAL
-    #Y OUTPUT. Y TEMP = Y GLOBAL + Y OUT IN LATEST STEPS MADE SINCE LAST CHANGE
+    #CURRENTLY THE WAY TO DETECT THE LAST 4 REAL Y OUTPUTS ON THE GLOBAL Y OUTPUT. 
+    #Y TEMP = Y GLOBAL + Y OUT( FOR LATEST STEPS MADE SINCE LAST CHANGE)
     y_temp = y_global.copy()
     for y in range(len(logged_time[changes]), len(time_steps)) :
         y_temp.insert(y, y_out[y]) 
-    #sets the tolerance for error in the last 4 time steps
+
+    #sets the tolerance time range for error in the last 4 time steps
     for y in range(len(time_steps)-4, len(time_steps)) :
         err_vall = err_vall + abs(desired_x_curr[y] - abs(y_temp[y]))      
     rec_val = err_vall * err_vall
-    #for previous fitness values  
     
     #This is setting the recognition level tolerance for changing the controller
+    #and the time between allowed controller reactions.
     if rec_val > 0.000 and time_curr-log_time >= 0.08:
         y_global = y_temp.copy()       
         changes = changes + 1
         logged_time.append(time_steps.copy())
         recognise = True
     
-    #for the end of program run to get the final output.
+    #for the end of program run to get the final portion of the system output.
     if time_curr == 10 :
         y_global = y_temp.copy()
     return recognise, changes, y_global, logged_time
@@ -199,7 +209,7 @@ def GA_controller(time_steps, pop, fit_val):
     mut_prob = 0.03
     kd_min, kd_max = 0, 100
     kp_min, kp_max = 0, 400
-    ki_min, ki_max = 0, 400
+    ki_min, ki_max = 0, 450
 
     if len(time_steps) == 1 :
         pop = Create_initial_generation(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
@@ -212,17 +222,52 @@ def initialise():
     """Sets desired_x inputs - currently for 10 seconds
     and other global variables. """
     desired_x = []
+    #"""
+    #10s
     for a in range(50) :
         desired_x.append(0)
     for b in range(150) :
         desired_x.append(1)
-    for c in range(0) :
-        desired_x.append(0)
     for d in range(150) :
         desired_x.append(5)
     for e in range(151) :
         desired_x.append(3)
-
+    #"""
+    """
+    #10s ramp section
+    for a in range(50) :
+        desired_x.append(0)
+    a = 0.0
+    for b in range(150) :
+        desired_x.append(1+a)
+        a = a+0.01
+    for d in range(150) :
+        desired_x.append(5)
+    for e in range(151) :
+        desired_x.append(3)
+    #"""
+    """
+    #20s
+    for a in range(50) :
+        desired_x.append(0)
+    for a in range(100) :
+        desired_x.append(2)
+    for a in range(100) :
+        desired_x.append(1)
+    for a in range(150) :
+        desired_x.append(4)
+    for a in range(150) :
+        desired_x.append(1)
+    for a in range(150) :
+        desired_x.append(3)
+    for a in range(100)  :
+        desired_x.append(6)
+    for a in range(150) :
+        desired_x.append(5)
+    for a in range(51) :
+        desired_x.append(1)
+    #"""
+    
     dt = 0.02 #s - 50Hz
     time_steps = []
     time_curr = -0.02 #Has to change with dt
@@ -252,17 +297,20 @@ while time_curr < 10 :
     time_steps.append(a) 
     time_curr = round(time_curr + dt, 2)
     
-    if time_curr == 3.4 :
+    """ DISTURBANCES
+    if time_curr == 5.8 :
         m = 2
-        c = 30 # Damper gets damaged
+        c = 28 # Damper gets damaged
         k = 20
         MSDden = [m, c, k]
-    
-    if time_curr == 6.9 :
+    #"""
+    """
+    if time_curr == 14.8 :
         m = 2
         c = 40 #Damper damage increases
         k = 5 #Spring gets damaged
         MSDden = [m, c, k]
+    #"""
 
     if time_curr == 0 :
         pop = GA_controller(time_steps, pop, fit_val) #It is currently expected that on start-up performance will be awful
@@ -279,7 +327,7 @@ while time_curr < 10 :
             pop = GA_controller(time_steps, pop, fit_val)
             fit_val = Fitness(MSDnum, MSDden, pop, time_steps, desired_x, y_global, logged_time)
             pop, fit_val = Fit_sort(pop, fit_val)
-
+            
 
 print("Number of controller changes: ", changes)
 print("Top genome: kd ", pop[0][0], "  kp ", pop[0][1], "  ki ", pop[0][2])
@@ -290,7 +338,11 @@ plt.xlabel('Time (s)')
 # Set the y axis label of the current axis.
 plt.ylabel('Amplitude')
 # Set a title of the current axes.
-plt.title('System Response to Varying Step Inputs')
+#plt.title('System Response to Varying Step Inputs')
+plt.title('System Response over 20 Seconds.')
+
+plt.xticks(np.arange(0, 11, step=2))
+
 # show a legend on the plot
 plt.legend()
 # Display a figure.
