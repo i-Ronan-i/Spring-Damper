@@ -186,7 +186,7 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
 
     #sets the tolerance time range for error in the last 4 time steps
     for y in range(len(time_steps)-4, len(time_steps)) :
-        err_vall = err_vall + abs(desired_x_curr[y] - abs(y_temp[y]))      
+        err_vall = err_vall + abs(desired_x_curr[y] - abs(y_temp[y]))     
     rec_val = err_vall * err_vall
     
     #This is setting the recognition level tolerance for changing the controller
@@ -198,7 +198,7 @@ def Recognise(changes, y_global, time_curr, log_time, time_steps, MSDnum, MSDden
         recognise = True
     
     #for the end of program run to get the final portion of the system output.
-    if time_curr == 10 :
+    if time_curr == 20 :
         y_global = y_temp.copy()
     return recognise, changes, y_global, logged_time
 
@@ -222,7 +222,22 @@ def initialise():
     """Sets desired_x inputs - currently for 10 seconds
     and other global variables. """
     desired_x = []
-    #"""
+    #20s for creating the amplitude values for the desired values of the system
+    for b in range(4) :
+    #5s
+        for a in range(50) :
+            desired_x.append(0)
+        for a in range(50) :
+            desired_x.append(1)
+        for a in range(50) :
+            desired_x.append(2)
+        for a in range(50) :
+            desired_x.append(3)
+        for a in range(50) :
+            desired_x.append(2)
+    for a in range(1) :
+            desired_x.append(2)
+    """
     #10s
     for a in range(50) :
         desired_x.append(0)
@@ -291,7 +306,7 @@ y_global = []
 a = -0.02 #has to change with dt
 
 logged_time.append(time_steps.copy())
-while time_curr < 10 :
+while time_curr < 20 :
 
     a = round(a + dt, 2)
     time_steps.append(a) 
