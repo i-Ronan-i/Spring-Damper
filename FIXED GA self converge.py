@@ -120,9 +120,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
     pop_premut = pop_top + pop_cross
     pop_new = mutate(pop_premut, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
 
-    #Create random members and saves
-    flag = False
-    
+    #Create random members and saves them    
     for s in range(pop_num - len(pop_new)):
         #Creating the random PID values
         kd_cur = round(random.uniform(kd_min, kd_max), 2)

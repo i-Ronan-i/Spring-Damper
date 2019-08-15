@@ -11,9 +11,11 @@ import random
 import time
 
 def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
+    global flag
     """Creates the initial population of the genetic algorithm while making sure it adheres to force constraints"""
     for s in range(pop_num):
         flag = True
+        flagged = 0
         while flag == True:
             flag = False
             #Creating the random PID values
@@ -27,6 +29,7 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
             #Simulates the current system [s].
             def sysCrInitPID(t,x):
                 global force_constraint
+                global flag
 
                 r=set_interp(t)
 
@@ -39,6 +42,7 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
                 if u > force_constraint:
                     flag = True
 
+
                 dxdt = [0,0,0]
 
                 dxdt[0] = dydt
@@ -47,13 +51,19 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
 
                 return [dxdt[0],dxdt[1],dxdt[2]]
 
-            tev = np.linspace(0,20,1000)
+            #tev = np.linspace(0,20,1000)
+            tev = []
+            temp = round(0.0, 2)
+            for times in range(int(20/dt)):
+                tev.append(temp)
+                temp = round(temp + dt, 2)
             x_ini = [0,0,0]        # initial conditions
             solga = solve_ivp(sysCrInitPID, [0, 20], x_ini, t_eval=tev)
             #If system never exceeds max force then continue.
         
         #Into 2-D List. Access via pop[i][j]
-        pop.insert(s, [kd_cur, kp_cur, ki_cur])
+        if flag == False:
+            pop.insert(s, [kd_cur, kp_cur, ki_cur])
     return pop
 
 def fitness(pop):
@@ -79,7 +89,7 @@ def fitness(pop):
 
             u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
             if u > force_constraint:
-                print("Fitness Force Constraint ALERT")
+                print("Fitness Force Constraint ALERT pop", s)
 
             dxdt = [0,0,0]
 
@@ -89,7 +99,12 @@ def fitness(pop):
 
             return [dxdt[0],dxdt[1],dxdt[2]]
 
-        tev = np.linspace(0,20,1000)
+        #tev = np.linspace(0,20,1000)
+        tev = []
+        temp = round(0.0, 2)
+        for times in range(int(20/dt)):
+            tev.append(temp)
+            temp = round(temp + dt, 2)
         x_ini = [0,0,0]        # initial conditions
         solga = solve_ivp(sysFitPID, [0, 20], x_ini, t_eval=tev)
         y_out = solga.y[0, :]
@@ -106,6 +121,7 @@ def crossover(a, b):
     """Finding cut-points for crossover
     and joining the two parts of the two members
     of the population together. """
+    global flag
     new_a = []  #Clearing previous 
     cut_a = random.randint(1, len(a)-1) #Makes sure there is always a cut
 
@@ -123,6 +139,7 @@ def crossover(a, b):
     flag = False
     def sysCrossPID(t,x):
         global force_constraint
+        global flag
 
         r=set_interp(t)
 
@@ -143,7 +160,12 @@ def crossover(a, b):
 
         return [dxdt[0],dxdt[1],dxdt[2]]
 
-    tev = np.linspace(0,20,1000)
+    #tev = np.linspace(0,20,1000)
+    tev = []
+    temp = round(0.0, 2)
+    for times in range(int(20/dt)):
+        tev.append(temp)
+        temp = round(temp + dt, 2)
     x_ini = [0,0,0]        # initial conditions
     solga = solve_ivp(sysCrossPID, [0, 20], x_ini, t_eval=tev)    
 
@@ -156,10 +178,14 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
     """Takes current population member and add a probability chance
     that it mutates via a 50:50 chance that it is reduced or increased
     by 10%."""
+    global flag
+    global kpbig, kibig, kdbig
     pop_curr = pop
     for i in range(0, len(pop_curr)):
+        mutation = False 
         for o in range(3) :
-            if random.random() < mut_prob:
+            if random.random() <= mut_prob:
+                mutation = True
                 if random.random() < 0.5:
                     pop_curr[i][o] = round(pop_curr[i][o] * 0.95, 2) #Maintains 2 d.p
                 else :
@@ -172,72 +198,80 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                         pop_curr[i][2] = float(ki_max)
                         
         #Keeping force contraints upheld
-        kpbig = 0
-        kibig = 0
-        kdbig = 0
-        flag = True
-        while flag == True:
-            flag = False
-            #Creating the random PID values
-            Kp = pop_curr[i][1]
-            Ki = pop_curr[i][2]
-            Kd = pop_curr[i][0]
-            
-            #Simulates the current system [s].
-            def sysMutPID(t,x):
-                global force_constraint
+        if mutation == True:
+            flag = True
+            while flag == True:
+                flag = False
+                #Creating the random PID values
+                Kp = pop_curr[i][1]
+                Ki = pop_curr[i][2]
+                Kd = pop_curr[i][0]
+                kpbig = 0
+                kibig = 0
+                kdbig = 0
+                #Simulates the current system [s].
+                def sysMutPID(t,x):
+                    global force_constraint
+                    global flag
+                    global kpbig, kibig, kdbig
 
-                r=set_interp(t)
+                    r=set_interp(t)
 
-                #State Variables
-                y = x[0]            # x1 POSITION
-                dydt = x[1]         # x2 VELOCITY
-                yi = x[2]           # x3
+                    #State Variables
+                    y = x[0]            # x1 POSITION
+                    dydt = x[1]         # x2 VELOCITY
+                    yi = x[2]           # x3
 
-                kp_force = Kp*(r-y)
-                ki_force = Ki*yi
-                kd_force = Kd*dydt
-                u = kp_force + ki_force + kd_force          # PID output
+                    kp_force = Kp*(r-y)
+                    ki_force = Ki*yi
+                    kd_force = -Kd*dydt
+                    u = kp_force + ki_force + kd_force          # PID output
 
-                #counters for mutation reduction if force is exceeded
-                if kp_force > ki_force and kp_force > kd_force :
-                    kpbig = kpbig+1
-                elif ki_force > kp_force and ki_force > kd_force :
-                    kibig = kibig+1
-                elif kd_force > ki_force and kd_force > kp_force :
-                    kdbig = kdbig+1
+                    #counters for mutation reduction if force is exceeded
+                    if kp_force > ki_force and kp_force > kd_force :
+                        kpbig +=1
+                    elif ki_force > kp_force and ki_force > kd_force :
+                        kibig +=1
+                    elif kd_force > ki_force and kd_force > kp_force :
+                        kdbig +=1
 
-                if u > force_constraint:
-                    flag = True
+                    if u > force_constraint:
+                        flag = True
 
-                dxdt = [0,0,0]
+                    dxdt = [0,0,0]
 
-                dxdt[0] = dydt
-                dxdt[1] = (- c * dydt - k * y + u)/m
-                dxdt[2] = r - y
+                    dxdt[0] = dydt
+                    dxdt[1] = (- c * dydt - k * y + u)/m
+                    dxdt[2] = r - y
 
-                return [dxdt[0],dxdt[1],dxdt[2]]
+                    return [dxdt[0],dxdt[1],dxdt[2]]
 
-            tev = np.linspace(0,20,1000)
-            x_ini = [0,0,0]        # initial conditions
-            solga = solve_ivp(sysMutPID, [0, 20], x_ini, t_eval=tev)
+                #tev = np.linspace(0,20,1000)
+                tev = []
+                temp = round(0.0, 2)
+                for times in range(int(20/dt)):
+                    tev.append(temp)
+                    temp = round(temp + dt, 2)
+                x_ini = [0,0,0]        # initial conditions
+                solga = solve_ivp(sysMutPID, [0, 20], x_ini, t_eval=tev)
 
-            #If system never exceeds max force then continue.
-            if flag == True:
-                #Mutation reduction of biggest contributing factor
-                if kpbig > kibig and kpbig > kdbig:
-                    pop_curr[i][1] = pop_curr[i][1] * 0.99
-                elif kibig > kpbig and kibig > kdbig:
-                    pop_curr[i][2] = pop_curr[i][2] * 0.99
-                elif kdbig > kibig and kdbig > kpbig:
-                    pop_curr[i][0] = pop_curr[i][0] * 0.99
+                #If system never exceeds max force then continue.
+                if flag == True:
+                    #Mutation reduction of biggest contributing factor
+                    if kpbig >= kibig and kpbig >= kdbig:
+                        pop_curr[i][1] = pop_curr[i][1] * 0.99
+                    elif kibig > kpbig and kibig >= kdbig:
+                        pop_curr[i][2] = pop_curr[i][2] * 0.99
+                    elif kdbig > kibig and kdbig > kpbig:
+                        pop_curr[i][0] = pop_curr[i][0] * 0.99
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #Saves top 3 performing genomes
+    global flag
     pop_top = []
-    for m in range(1) :
+    for n in range(1) :
         pop_top.append(pop[m])
 
     #Crossover performed in top 20
@@ -269,6 +303,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
             #Simulates the current system [s].
             def sysCrGenPID(t,x):
                 global force_constraint
+                global flag
 
                 r=set_interp(t)
 
@@ -289,7 +324,12 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
 
                 return [dxdt[0],dxdt[1],dxdt[2]]
 
-            tev = np.linspace(0,20,1000)
+            #tev = np.linspace(0,20,1000)
+            tev = []
+            temp = round(0.0, 2)
+            for times in range(int(20/dt)):
+                tev.append(temp)
+                temp = round(temp + dt, 2)
             x_ini = [0,0,0]        # initial conditions
             solga = solve_ivp(sysCrGenPID, [0, 20], x_ini, t_eval=tev)
             #If system never exceeds max force then continue.
@@ -333,6 +373,10 @@ pop = []
 mut_prob = 0.08  #probability for mutation set here
 dt = 0.02
 iteration_max = 200 #Total number of iterations and generations set here
+flag = True #Making it global
+kpbig = 0   #Globalising these 
+kibig = 0   #
+kdbig = 0   #
 
 #Minimum and maximum PID coefficient gains.
 kd_min, kd_max = 0, 500
@@ -351,7 +395,13 @@ def setpoint(t):
     else:
             r = 0
     return r
-tempo = np.linspace(0, 20, int(20/dt))
+
+temp = round(0.00, 2)
+tempo = []
+for times in range(int(20/dt)):
+    tempo.append(temp)
+    temp = round(temp + dt, 2)
+#tempo = np.linspace(0, 20, 20/dt)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -409,7 +459,7 @@ def sysFinPID(t,x):
     u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
 
     if abs(u)>force_constraint:
-        print("A L E R T")
+        print("FINAL SOLUTION A L E R T")
 
     dxdt = [0,0,0]
 
@@ -419,7 +469,12 @@ def sysFinPID(t,x):
 
     return [dxdt[0],dxdt[1],dxdt[2]]
 
-tev = np.linspace(0,20,1000)
+#tev = np.linspace(0,20,1000)
+temp = round(0.00, 2)
+tev = []
+for times in range(int(20/dt)):
+    tev.append(temp)
+    temp = round(temp + dt, 2)
 x_ini = [0,0,0]        # initial conditions
 solga = solve_ivp(sysFinPID, [0, 20], x_ini, t_eval=tev)
 y_out = solga.y[0, :]
