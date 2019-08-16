@@ -36,7 +36,7 @@ def setpoint(t):
 
     return r
 
-tempo = np.linspace(0, 20, 20*4)
+tempo = np.linspace(0, 20, 20*5)
 rise_time = 0.1
 set_point=[]
 for items in tempo:

@@ -222,12 +222,14 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                     dydt = x[1]         # x2 VELOCITY
                     yi = x[2]           # x3
 
+                    u = Kp * (r - y) + Ki * yi - Kd * dydt         # PID output
+                    if abs(u) > force_constraint:
+                        flag = True
+
+                    #counters for mutation reduction if force is exceeded
                     kp_force = Kp*(r-y)
                     ki_force = Ki*yi
                     kd_force = -Kd*dydt
-                    u = kp_force + ki_force + kd_force          # PID output
-
-                    #counters for mutation reduction if force is exceeded
                     if kp_force > ki_force and kp_force > kd_force :
                         kpbig +=1
                     elif ki_force > kp_force and ki_force > kd_force :
@@ -235,15 +237,11 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                     elif kd_force > ki_force and kd_force > kp_force :
                         kdbig +=1
 
-                    if abs(u) > force_constraint:
-                        flag = True
-
                     dxdt = [0,0,0]
 
                     dxdt[0] = dydt
                     dxdt[1] = (- c * dydt - k * y + u)/m
                     dxdt[2] = r - y
-
                     return [dxdt[0],dxdt[1],dxdt[2]]
 
                 #tev = np.linspace(0,20,1000)
