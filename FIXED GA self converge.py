@@ -65,7 +65,7 @@ def fitness(pop):
 
         err_val = 0.0
         for y in range(len(t_out)) :
-            err_val = err_val + abs(set_point[y] - y_out[y])  
+            err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])  
 
         fit_val.insert(s, err_val)
     return fit_val
@@ -91,7 +91,7 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
     pop_curr = pop
     for i in range(0, len(pop_curr)):
         for o in range(3) :
-            if random.random() < mut_prob:
+            if random.random() <= mut_prob:
                 if random.random() < 0.5:
                     pop_curr[i][o] = round(pop_curr[i][o] * 0.95, 2) #Maintains 2 d.p
                 else :
@@ -187,12 +187,8 @@ def setpoint(t):
     else:
             r = 0
     return r
-temp = round(0.00, 2)
-tempo = []
-for times in range(int(20/dt)):
-    tempo.append(temp)
-    temp = round(temp + dt, 2)
-#tempo = np.linspace(0, 20, 20/dt)
+
+tempo = np.linspace(0, 20, 20*5)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -258,7 +254,7 @@ t_out = solga.t
 
 err_vall = 0.0
 for y in range(len(t_out)) :
-    err_vall = err_vall + abs(set_point[y] - y_out[y])
+    err_vall = err_vall + abs(set_interp(t_out[y]) - y_out[y])
 err_val = err_vall  
 print("Fitness values of solution is: ", err_val)
 

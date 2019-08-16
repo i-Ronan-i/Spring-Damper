@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 """ MAIN CODE PROGRAM BODY """
 #first thing is to create the system itself - MSD, input
 #MSD state definitions
-"""
+#"""
 def setpoint(t):
     if (t > 0 and t < 4):
             r = 2
@@ -30,7 +30,7 @@ def setpoint(t):
 
     return r
 #"""
-#"""
+"""
 def setpoint(t):
     if (t >= 0 and t < 1) or (t>=5 and t<6) or (t>=10 and t<11) or (t>=15 and t<16):
             r = 0
@@ -46,11 +46,7 @@ def setpoint(t):
             r = 0
     return r
 #"""
-temp = round(0.00, 2)
-tempo = []
-for times in range(int(20/dt)):
-    tempo.append(temp)
-    temp = round(temp + dt, 2)
+tempo = np.linspace(0, 20, 20*5)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -58,15 +54,14 @@ for items in tempo:
 
 set_interp = PchipInterpolator(tempo, set_point)
 
-
-Kp = 500.0
-Ki = 147.02
-Kd = 27.04
+Kp = 425.63
+Ki = 64.88
+Kd = 108.34
 dt = 0.02
 rise_time = 0.1
 m = 1  # M  [Kg]
-c = 5  # C  [Ns/m]
-k = 10  # K  [N/m]
+c = 10  # C  [Ns/m]
+k = 20  # K  [N/m]
 
 
 r_max = max(set_point)
@@ -74,8 +69,8 @@ r_min = min(set_point)
 ar = 2 * r_max / (rise_time ** 2)
 vr = ar * rise_time
 yr = 0.9 * r_max
-#force_constraint = m * ar + c * vr + k * yr
-force_constraint = 2500 #N
+force_constraint = m * ar + c * vr + k * yr
+#force_constraint = 2500 #N
 print("Force constraint is (N): ", force_constraint)
 
 
@@ -116,10 +111,9 @@ solga = solve_ivp(sys2PID, [0, 20], x_ini, t_eval=tev)
 y_out = solga.y[0, :]
 t_out = solga.t
 
-err_vall = 0.0
+err_val = 0.0
 for y in range(len(t_out)) :
-    err_vall = err_vall + abs(set_point[y] - y_out[y])
-err_val = err_vall  
+    err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])
 print("Fitness value of top performing member: ", round(err_val, 4))
 
 #Plotting code

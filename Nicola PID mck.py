@@ -36,7 +36,7 @@ def setpoint(t):
 
     return r
 
-tempo = np.linspace(0, 20, 20*100)
+tempo = np.linspace(0, 20, 20*4)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -57,9 +57,9 @@ print(force_constraint)
 
 def sys2PID(t,x):
     global force_constraint
-    Kp = 443.8  # Proportional Gain
-    Ki =  845.52 # Integrative Gain
-    Kd = 44.65  # Derivative Gain
+    Kp = 425.63  # Proportional Gain
+    Ki =  64.88 # Integrative Gain
+    Kd = 108.34 # Derivative Gain
 
     r=set_interp(t)
 
@@ -71,7 +71,7 @@ def sys2PID(t,x):
     u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
 
     if abs(u)>force_constraint:
-        print("A L L E R T")
+        print("A L E R T")
 
     dxdt = [0,0,0]
 

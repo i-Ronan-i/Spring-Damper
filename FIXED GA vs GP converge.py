@@ -39,7 +39,7 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
                 yi = x[2]           # x3
 
                 u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-                if u > force_constraint:
+                if abs(u) > force_constraint:
                     flag = True
 
 
@@ -88,7 +88,7 @@ def fitness(pop):
             yi = x[2]           # x3
 
             u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-            if u > force_constraint:
+            if abs(u) > force_constraint:
                 print("Fitness Force Constraint ALERT pop", s)
 
             dxdt = [0,0,0]
@@ -112,7 +112,7 @@ def fitness(pop):
 
         err_val = 0.0
         for y in range(len(t_out)) :
-            err_val = err_val + abs(set_point[y] - y_out[y])  
+            err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])  
 
         fit_val.insert(s, err_val)
     return fit_val
@@ -149,7 +149,7 @@ def crossover(a, b):
         yi = x[2]           # x3
 
         u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-        if u > force_constraint:
+        if abs(u) > force_constraint:
             flag = True
 
         dxdt = [0,0,0]
@@ -235,7 +235,7 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                     elif kd_force > ki_force and kd_force > kp_force :
                         kdbig +=1
 
-                    if u > force_constraint:
+                    if abs(u) > force_constraint:
                         flag = True
 
                     dxdt = [0,0,0]
@@ -313,7 +313,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
                 yi = x[2]           # x3
 
                 u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-                if u > force_constraint:
+                if abs(u) > force_constraint:
                     flag = True
 
                 dxdt = [0,0,0]
@@ -372,7 +372,7 @@ pop_num = 60    #How large the initial population is
 pop = []
 mut_prob = 0.08  #probability for mutation set here
 dt = 0.02
-iteration_max = 5 #Total number of iterations and generations set here
+iteration_max = 60 #Total number of iterations and generations set here
 flag = True #Making it global
 kpbig = 0   #Globalising these 
 kibig = 0   #
@@ -396,12 +396,8 @@ def setpoint(t):
             r = 0
     return r
 
-temp = round(0.00, 2)
-tempo = []
-for times in range(int(20/dt)):
-    tempo.append(temp)
-    temp = round(temp + dt, 2)
-#tempo = np.linspace(0, 20, 20/dt)
+
+tempo = np.linspace(0, 20, 20*5)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -482,21 +478,21 @@ t_out = solga.t
 
 err_vall = 0.0
 for y in range(len(t_out)) :
-    err_vall = err_vall + abs(set_point[y] - y_out[y])
+    err_vall = err_vall + abs(set_interp(t_out[y]) - y_out[y])
 err_val = err_vall 
 print("The Fitness Value of the solution is: ", err_val) 
 
 #Plotting code
-plt.plot(tempo, set_point, "r--", label="Set point command (m)")
-plt.plot(t_out, y_out, label = "System Output - X(s)") 
-plt.xlabel('Time (s)')
+plt.plot(tempo, set_point, "r--", label="Set Point Command [m]")
+plt.plot(t_out, y_out, label = "System Output X(s) [m]") 
+plt.xlabel('Time [s]')
 # Set the y axis label of the current axis.
-plt.ylabel('Amplitude (m)')
+plt.ylabel('Amplitude [m]')
 # Set a title of the current axes.
 #plt.title('System Response to Varying Step Inputs')
 plt.title('System Response over 20 Seconds.')
 
-plt.xticks(np.arange(0, 20.5, step=2))
+plt.xticks(np.arange(0, 20.5, step=1))
 
 # show a legend on the plot
 plt.legend()
