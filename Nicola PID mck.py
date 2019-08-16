@@ -57,9 +57,9 @@ print(force_constraint)
 
 def sys2PID(t,x):
     global force_constraint
-    Kp = 425.63  # Proportional Gain
-    Ki =  64.88 # Integrative Gain
-    Kd = 108.34 # Derivative Gain
+    Kp = 452.59  # Proportional Gain
+    Ki = 416.11 # Integrative Gain
+    Kd = 14.76 # Derivative Gain
 
     r=set_interp(t)
 
@@ -105,8 +105,13 @@ def sys2GP(t,x):
 
     return [dxdt[0],dxdt[1],dxdt[2]]
 
-tev = np.linspace(0,20,1000)
-
+#changed from np.linspace just because I didn't like the lack of rounding with each point
+temp = round(0.00, 2)
+dt=0.02
+tev = []
+for times in range(int(20/dt)):
+    tev.append(temp)
+    temp = round(temp + dt, 2)
 x_ini = [0,0,0]        # initial conditions
 solga = solve_ivp(sys2PID, [0, 20], x_ini, t_eval=tev)
 yga = solga.y[0, :]

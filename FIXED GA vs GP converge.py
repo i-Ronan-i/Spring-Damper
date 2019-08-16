@@ -257,11 +257,11 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                 if flag == True:
                     #Mutation reduction of biggest contributing factor
                     if kpbig >= kibig and kpbig >= kdbig:
-                        pop_curr[i][1] = pop_curr[i][1] * 0.99
+                        pop_curr[i][1] = rouund(pop_curr[i][1] * 0.99,2)
                     elif kibig > kpbig and kibig >= kdbig:
-                        pop_curr[i][2] = pop_curr[i][2] * 0.99
+                        pop_curr[i][2] = round(pop_curr[i][2] * 0.99,2)
                     elif kdbig > kibig and kdbig > kpbig:
-                        pop_curr[i][0] = pop_curr[i][0] * 0.99
+                        pop_curr[i][0] = round(pop_curr[i][0] * 0.99,2)
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):

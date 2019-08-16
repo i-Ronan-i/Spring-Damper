@@ -54,9 +54,9 @@ for items in tempo:
 
 set_interp = PchipInterpolator(tempo, set_point)
 
-Kp = 425.63
-Ki = 64.88
-Kd = 108.34
+Kp = 452.59
+Ki = 416.11
+Kd = 14.76
 dt = 0.02
 rise_time = 0.1
 m = 1  # M  [Kg]

@@ -170,7 +170,7 @@ iteration_max = 60 #Total number of iterations and generations set here
 dt = 0.02
 #Minimum and maximum PID coefficient gains.
 kd_min, kd_max = 0, 500
-kp_min, kp_max = 0, 500
+kp_min, kp_max = 0, 600
 ki_min, ki_max = 0, 900
 
 def setpoint(t):
