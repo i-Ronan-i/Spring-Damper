@@ -15,18 +15,7 @@ import matplotlib.pyplot as plt
 """ MAIN CODE PROGRAM BODY """
 #first thing is to create the system itself - MSD, input
 #MSD state definitions
-m = 1 # kg   - mass
-c = 10 # Ns/m - damping coefficient
-k = 20 # N/m  - spring coefficient
-
-# Transfer function definitions
-pop = [[44.65, 443.8, 845.52]] #specially coverged Nicola one
-Kp = 443.80
-Ki = 845.52
-Kd = 44.65
-timesteps = 20/0.01 #Simulation length set here
-
-
+"""
 def setpoint(t):
     if (t > 0 and t < 4):
             r = 2
@@ -40,7 +29,28 @@ def setpoint(t):
             r = 0
 
     return r
-tempo = np.linspace(0, 20, 20*50)
+#"""
+#"""
+def setpoint(t):
+    if (t >= 0 and t < 1) or (t>=5 and t<6) or (t>=10 and t<11) or (t>=15 and t<16):
+            r = 0
+    elif (t >= 1 and t < 2) or (t>=6 and t<7) or (t>=11 and t<12) or (t>=16 and t<17):
+            r = 1
+    elif (t >= 2 and t < 3) or (t>=7 and t<8) or (t>=12 and t<13) or (t>=17 and t<18):
+            r = 2
+    elif (t >= 3 and t < 4) or (t>=8 and t<9) or (t>=13 and t<14) or (t>=18 and t<19):
+            r = 2.5
+    elif (t >= 4 and t < 5) or (t>=9 and t<10) or (t>=14 and t<15) or (t>=19 and t<20):
+            r = 1
+    else:
+            r = 0
+    return r
+#"""
+temp = round(0.00, 2)
+tempo = []
+for times in range(int(20/dt)):
+    tempo.append(temp)
+    temp = round(temp + dt, 2)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -48,18 +58,27 @@ for items in tempo:
 
 set_interp = PchipInterpolator(tempo, set_point)
 
+
+Kp = 500.0
+Ki = 147.02
+Kd = 27.04
+dt = 0.02
 rise_time = 0.1
 m = 1  # M  [Kg]
-c = 10  # C  [Ns/m]
-k = 20  # K  [N/m]
+c = 5  # C  [Ns/m]
+k = 10  # K  [N/m]
+
+
 r_max = max(set_point)
 r_min = min(set_point)
 ar = 2 * r_max / (rise_time ** 2)
 vr = ar * rise_time
 yr = 0.9 * r_max
-
-force_constraint = m * ar + c * vr + k * yr
+#force_constraint = m * ar + c * vr + k * yr
+force_constraint = 2500 #N
 print("Force constraint is (N): ", force_constraint)
+
+
 
 def sys2PID(t,x):
     global force_constraint
@@ -87,8 +106,11 @@ def sys2PID(t,x):
 
     return [dxdt[0],dxdt[1],dxdt[2]]
 
-tev = np.linspace(0,20,1000)
-
+temp = round(0.00, 2)
+tev = []
+for times in range(int(20/dt)):
+    tev.append(temp)
+    temp = round(temp + dt, 2)
 x_ini = [0,0,0]        # initial conditions
 solga = solve_ivp(sys2PID, [0, 20], x_ini, t_eval=tev)
 y_out = solga.y[0, :]

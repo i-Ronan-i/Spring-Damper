@@ -53,7 +53,11 @@ def fitness(pop):
 
             return [dxdt[0],dxdt[1],dxdt[2]]
         
-        tev = np.linspace(0,20,1000)
+        temp = round(0.00, 2)
+        tev = []
+        for times in range(int(20/dt)):
+            tev.append(temp)
+            temp = round(temp + dt, 2)
         x_ini = [0,0,0]        # initial conditions
         solga = solve_ivp(sys2PID, [0, 20], x_ini, t_eval=tev)
         y_out = solga.y[0, :]
@@ -159,10 +163,10 @@ m = 1 # kg   - mass
 c = 5 # Ns/m - damping coefficient
 k = 10 # N/m  - spring coefficient
 
-pop_num = 80    #How large the initial population is
+pop_num = 60    #How large the initial population is
 pop = []
 mut_prob = 0.08  #probability for mutation set here
-iteration_max = 120 #Total number of iterations and generations set here
+iteration_max = 60 #Total number of iterations and generations set here
 dt = 0.02
 #Minimum and maximum PID coefficient gains.
 kd_min, kd_max = 0, 500
@@ -183,7 +187,13 @@ def setpoint(t):
     else:
             r = 0
     return r
-tempo = np.linspace(0, 20, int(20/dt))
+temp = round(0.00, 2)
+tempo = []
+for times in range(int(20/dt)):
+    tempo.append(temp)
+    temp = round(temp + dt, 2)
+#tempo = np.linspace(0, 20, 20/dt)
+rise_time = 0.1
 set_point=[]
 for items in tempo:
     set_point.append(setpoint(items))
@@ -210,7 +220,7 @@ fit_val = fitness(pop)
 pop, fit_val = fit_sort(pop, fit_val)
 print("Top overall Coefficients: kd = ", pop[0][0], "  kp = ", pop[0][1], "  ki = ", pop[0][2])
 print("Fitness value of top performing member: ", round(fit_val[0], 4))
-print("Time elapsed: ", time.time()-start_time)
+print("Time elapsed: ", (time.time()-start_time)/60, " minutes.")
 
 Kp = pop[0][1]
 Ki = pop[0][2]
@@ -236,7 +246,11 @@ def sysFinPID(t,x):
 
     return [dxdt[0],dxdt[1],dxdt[2]]
 
-tev = np.linspace(0,20,1000)
+temp = round(0.00, 2)
+tev = []
+for times in range(int(20/dt)):
+    tev.append(temp)
+    temp = round(temp + dt, 2)
 x_ini = [0,0,0]        # initial conditions
 solga = solve_ivp(sysFinPID, [0, 20], x_ini, t_eval=tev)
 y_out = solga.y[0, :]
