@@ -199,6 +199,7 @@ set_interp = PchipInterpolator(tempo, set_point)
 ################################################# ----- Main GA call stack ----- ################################################
 iteration = 0
 while iteration < iteration_max:
+    print("Iteration: ", iteration)
     if iteration == 0:
         pop = create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
         fit_val = fitness(pop)

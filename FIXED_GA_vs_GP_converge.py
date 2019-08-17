@@ -39,7 +39,7 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
                 yi = x[2]           # x3
 
                 u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-                if u > force_constraint:
+                if abs(u) > force_constraint:
                     flag = True
 
 
@@ -88,7 +88,7 @@ def fitness(pop):
             yi = x[2]           # x3
 
             u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-            if u > force_constraint:
+            if abs(u) > force_constraint:
                 print("Fitness Force Constraint ALERT pop", s)
 
             dxdt = [0,0,0]
@@ -112,7 +112,7 @@ def fitness(pop):
 
         err_val = 0.0
         for y in range(len(t_out)) :
-            err_val = err_val + abs(set_point[y] - y_out[y])  
+            err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])  
 
         fit_val.insert(s, err_val)
     return fit_val
@@ -149,7 +149,7 @@ def crossover(a, b):
         yi = x[2]           # x3
 
         u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-        if u > force_constraint:
+        if abs(u) > force_constraint:
             flag = True
 
         dxdt = [0,0,0]
@@ -222,12 +222,14 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                     dydt = x[1]         # x2 VELOCITY
                     yi = x[2]           # x3
 
+                    u = Kp * (r - y) + Ki * yi - Kd * dydt         # PID output
+                    if abs(u) > force_constraint:
+                        flag = True
+
+                    #counters for mutation reduction if force is exceeded
                     kp_force = Kp*(r-y)
                     ki_force = Ki*yi
                     kd_force = -Kd*dydt
-                    u = kp_force + ki_force + kd_force          # PID output
-
-                    #counters for mutation reduction if force is exceeded
                     if kp_force > ki_force and kp_force > kd_force :
                         kpbig +=1
                     elif ki_force > kp_force and ki_force > kd_force :
@@ -235,15 +237,11 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                     elif kd_force > ki_force and kd_force > kp_force :
                         kdbig +=1
 
-                    if u > force_constraint:
-                        flag = True
-
                     dxdt = [0,0,0]
 
                     dxdt[0] = dydt
                     dxdt[1] = (- c * dydt - k * y + u)/m
                     dxdt[2] = r - y
-
                     return [dxdt[0],dxdt[1],dxdt[2]]
 
                 #tev = np.linspace(0,20,1000)
@@ -259,11 +257,11 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                 if flag == True:
                     #Mutation reduction of biggest contributing factor
                     if kpbig >= kibig and kpbig >= kdbig:
-                        pop_curr[i][1] = pop_curr[i][1] * 0.99
+                        pop_curr[i][1] = rouund(pop_curr[i][1] * 0.99,2)
                     elif kibig > kpbig and kibig >= kdbig:
-                        pop_curr[i][2] = pop_curr[i][2] * 0.99
+                        pop_curr[i][2] = round(pop_curr[i][2] * 0.99,2)
                     elif kdbig > kibig and kdbig > kpbig:
-                        pop_curr[i][0] = pop_curr[i][0] * 0.99
+                        pop_curr[i][0] = round(pop_curr[i][0] * 0.99,2)
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
@@ -313,7 +311,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
                 yi = x[2]           # x3
 
                 u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
-                if u > force_constraint:
+                if abs(u) > force_constraint:
                     flag = True
 
                 dxdt = [0,0,0]
@@ -384,26 +382,20 @@ kp_min, kp_max = 0, 500
 ki_min, ki_max = 0, 900
 
 def setpoint(t):
-    if (t >= 0 and t < 1) or (t>=5 and t<6) or (t>=10 and t<11) or (t>=15 and t<16):
-            r = 0
-    elif (t >= 1 and t < 2) or (t>=6 and t<7) or (t>=11 and t<12) or (t>=16 and t<17):
-            r = 1
-    elif (t >= 2 and t < 3) or (t>=7 and t<8) or (t>=12 and t<13) or (t>=17 and t<18):
+    if (t >= 0 and t < 4):
             r = 2
-    elif (t >= 3 and t < 4) or (t>=8 and t<9) or (t>=13 and t<14) or (t>=18 and t<19):
-            r = 2.5
-    elif (t >= 4 and t < 5) or (t>=9 and t<10) or (t>=14 and t<15) or (t>=19 and t<20):
-            r = 1
+    elif (t >= 4 and t < 9):
+            r = 3
+    elif (t >= 9 and t < 14):
+            r = 8
+    elif (t >= 14 and t < 21):
+            r = 3
     else:
             r = 0
     return r
 
-temp = round(0.00, 2)
-tempo = []
-for times in range(int(20/dt)):
-    tempo.append(temp)
-    temp = round(temp + dt, 2)
-#tempo = np.linspace(0, 20, 20/dt)
+
+tempo = np.linspace(0, 20, 20*5)
 rise_time = 0.1
 set_point=[]
 for items in tempo:
@@ -424,6 +416,7 @@ print("Force constraint is (N): ", force_constraint)
 ################################################# ----- Main GA call stack ----- ################################################
 iteration = 0
 while iteration < iteration_max:
+    print("Iteration: ", iteration)
     if iteration == 0:
         pop = create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
         fit_val = fitness(pop)
@@ -484,21 +477,21 @@ t_out = solga.t
 
 err_vall = 0.0
 for y in range(len(t_out)) :
-    err_vall = err_vall + abs(set_point[y] - y_out[y])
+    err_vall = err_vall + abs(set_interp(t_out[y]) - y_out[y])
 err_val = err_vall 
 print("The Fitness Value of the solution is: ", err_val) 
 
 #Plotting code
-plt.plot(tempo, set_point, "r--", label="Set point command (m)")
-plt.plot(t_out, y_out, label = "System Output - X(s)") 
-plt.xlabel('Time (s)')
+plt.plot(tempo, set_point, "r--", label="Set Point Command [m]")
+plt.plot(t_out, y_out, label = "System Output X(s) [m]") 
+plt.xlabel('Time [s]')
 # Set the y axis label of the current axis.
-plt.ylabel('Amplitude (m)')
+plt.ylabel('Amplitude [m]')
 # Set a title of the current axes.
 #plt.title('System Response to Varying Step Inputs')
 plt.title('System Response over 20 Seconds.')
 
-plt.xticks(np.arange(0, 20.5, step=2))
+plt.xticks(np.arange(0, 20.5, step=1))
 
 # show a legend on the plot
 plt.legend()
