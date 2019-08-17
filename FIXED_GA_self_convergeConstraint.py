@@ -390,14 +390,14 @@ def setpoint(t):
             r = 2
     elif (t >= 3 and t < 4) or (t>=8 and t<9) or (t>=13 and t<14) or (t>=18 and t<19):
             r = 2.5
-    elif (t >= 4 and t < 5) or (t>=9 and t<10) or (t>=14 and t<15) or (t>=19 and t<20):
+    elif (t >= 4 and t < 5) or (t>=9 and t<10) or (t>=14 and t<15) or (t>=19 and t<21):
             r = 1
     else:
             r = 0
     return r
 
 
-tempo = np.linspace(0, 20, 20*5)
+tempo = np.linspace(0, 20, 20*10)
 rise_time = 0.1
 set_point=[]
 for items in tempo:

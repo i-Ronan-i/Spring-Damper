@@ -27,7 +27,6 @@ def setpoint(t):
             r = 3
     else:
             r = 0
-
     return r
 #"""
 """
@@ -54,23 +53,22 @@ for items in tempo:
 
 set_interp = PchipInterpolator(tempo, set_point)
 
+pop = [14.76, 452.59, 416.12] #GA vs GP chromosome. Time = 114.72minutes
+#pop = [] #GA no constraint
+#pop = [] #GA with constraint
+
 Kp = 452.59
 Ki = 416.11
 Kd = 14.76
 dt = 0.02
 rise_time = 0.1
+
 m = 1  # M  [Kg]
-c = 10  # C  [Ns/m]
-k = 20  # K  [N/m]
+c = 5  # C  [Ns/m]
+k = 10  # K  [N/m]
 
+force_constraint = 3000 #N
 
-r_max = max(set_point)
-r_min = min(set_point)
-ar = 2 * r_max / (rise_time ** 2)
-vr = ar * rise_time
-yr = 0.9 * r_max
-force_constraint = m * ar + c * vr + k * yr
-#force_constraint = 2500 #N
 print("Force constraint is (N): ", force_constraint)
 
 

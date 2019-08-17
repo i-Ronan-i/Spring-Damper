@@ -53,13 +53,15 @@ ar = 2 * r_max / (rise_time ** 2)
 vr = ar * rise_time
 yr = 0.9 * r_max
 force_constraint = a1 * vr + a2 * yr + a0 * ar
-print(force_constraint)
+print("Force Constraint: ", force_constraint)
 
 def sys2PID(t,x):
     global force_constraint
     Kp = 452.59  # Proportional Gain
-    Ki = 416.11 # Integrative Gain
+    Ki = 416.12 # Integrative Gain
     Kd = 14.76 # Derivative Gain
+    #Time to complete: 113.72mins
+    #Fitness: 46.3401
 
     r=set_interp(t)
 
@@ -117,19 +119,23 @@ solga = solve_ivp(sys2PID, [0, 20], x_ini, t_eval=tev)
 yga = solga.y[0, :]
 tga = solga.t
 
+err_val = 0.0
+for y in range(len(tga)) :
+    err_val = err_val + abs(set_interp(tga[y]) - yga[y])
+print("Fitness value of top performing member: ", round(err_val, 4))
 
 solgp = solve_ivp(sys2GP, [0, 20], x_ini, t_eval=tev)
 ygp = solgp.y[0, :]
 tgp = solgp.t
 
-
-plt.xlabel("t [s]")
-plt.ylabel("")
-plt.plot(tga,yga,label="mass position with GA controller [m]")
-plt.plot(tgp,ygp,label="mass position with GP controller [m]")
-plt.plot(tempo,set_point,"r--",label="set point command [m]")
+plt.title("Response Comparison Between GA Tuned PID Controller and GP Controller")
+plt.xlabel("Time [s]")
+plt.ylabel("Amplitude [m]")
+plt.plot(tga,yga,label="Mass Position with GA controller [m]")
+plt.plot(tgp,ygp,label="Mass Position with GP controller [m]")
+plt.plot(tempo,set_point,"r--",label="Setpoint Command [m]")
 #plt.plot(t,y_dot,label='velocity [m/s]')
 #plt.plot(t_acc,acc,label='acceleration [m/s^2]')
 plt.legend()
-plt.savefig('pid.png')
+plt.grid()
 plt.show()
