@@ -11,6 +11,7 @@ import random
 import time
 
 def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
+    print("     Create Initial Population")
     global flag
     """Creates the initial population of the genetic algorithm while making sure it adheres to force constraints"""
     for s in range(pop_num):
@@ -70,6 +71,7 @@ def fitness(pop):
     """Calculates the fitness values of each member in pop[population]
     Also sets the simulation time in timesteps."""
     fit_val = []
+    print("     Fitness")
     for s in range(len(pop)):
         #Grab the pop PID values
         Kp = pop[s][1]
@@ -265,6 +267,7 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
+    print("     Create Next Generation")
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #Saves top 3 performing genomes
     global flag
@@ -274,6 +277,7 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
 
     #Crossover performed in top 20
     pop_cross = []
+    print("         Crossover")
     for n in range(25):
         new_pop1 = crossover(pop[n], pop[n+1])
         pop_cross.append(new_pop1)
@@ -283,9 +287,11 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
     pop_new = []
     pop_premut = []
     pop_premut = pop_top + pop_cross
+    print("Mutate")
     pop_new = mutate(pop_premut, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
 
     #Create random members and saves   
+    print("         Create random")
     for s in range(pop_num - len(pop_new)):
         flag = True
         while flag == True:
@@ -378,7 +384,7 @@ kdbig = 0   #
 
 #Minimum and maximum PID coefficient gains.
 kd_min, kd_max = 0, 500
-kp_min, kp_max = 0, 500
+kp_min, kp_max = 0, 600
 ki_min, ki_max = 0, 900
 
 def setpoint(t):
