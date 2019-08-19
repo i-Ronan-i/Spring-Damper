@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import random
 import time
 
-def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
-    print("     Create Initial Population")
+def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max, fit_val):
+    print(" Create Initial Population")
     global flag
     """Creates the initial population of the genetic algorithm while making sure it adheres to force constraints"""
     for s in range(pop_num):
@@ -62,16 +62,22 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
             solga = solve_ivp(sysCrInitPID, [0, 20], x_ini, t_eval=tev)
             #If system never exceeds max force then continue.
         
-        #Into 2-D List. Access via pop[i][j]
-        if flag == False:
-            pop.insert(s, [kd_cur, kp_cur, ki_cur])
-    return pop
+            #Into 2-D List. Access via pop[i][j]
+            if flag == False:
+                y_out = solga.y[0, :]
+                t_out = solga.t
+                err_val = 0.0
+                for y in range(len(t_out)) :
+                    err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])  
 
-def fitness(pop):
+                fit_val.insert(s, err_val)
+                pop.insert(s, [kd_cur, kp_cur, ki_cur])
+    return pop, fit_val
+
+def fitness(pop, fit_val):
     """Calculates the fitness values of each member in pop[population]
     Also sets the simulation time in timesteps."""
-    fit_val = []
-    print("     Fitness")
+    print(" Fitness")
     for s in range(len(pop)):
         #Grab the pop PID values
         Kp = pop[s][1]
@@ -259,7 +265,7 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                 if flag == True:
                     #Mutation reduction of biggest contributing factor
                     if kpbig >= kibig and kpbig >= kdbig:
-                        pop_curr[i][1] = rouund(pop_curr[i][1] * 0.99,2)
+                        pop_curr[i][1] = round(pop_curr[i][1] * 0.99,2)
                     elif kibig > kpbig and kibig >= kdbig:
                         pop_curr[i][2] = round(pop_curr[i][2] * 0.99,2)
                     elif kdbig > kibig and kdbig > kpbig:
@@ -267,17 +273,18 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
     return pop_curr
 
 def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max):
-    print("     Create Next Generation")
+    print(" Create Next Generation")
     """Top 20 reproduce(crossover, mutation), top 5 remain, 15 randomly created."""
     #Saves top 3 performing genomes
     global flag
     pop_top = []
+    fit_val = []
     for n in range(1) :
         pop_top.append(pop[m])
 
     #Crossover performed in top 20
     pop_cross = []
-    print("         Crossover")
+    print("     Crossover")
     for n in range(25):
         new_pop1 = crossover(pop[n], pop[n+1])
         pop_cross.append(new_pop1)
@@ -287,12 +294,13 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
     pop_new = []
     pop_premut = []
     pop_premut = pop_top + pop_cross
-    print("Mutate")
+    print("     Mutate")
     pop_new = mutate(pop_premut, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
+    len_preRandom = len(pop_new)
 
     #Create random members and saves   
-    print("         Create random")
-    for s in range(pop_num - len(pop_new)):
+    print(" Create random")
+    for s in range(len_preRandom, pop_num):
         flag = True
         while flag == True:
             flag = False
@@ -339,8 +347,15 @@ def create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_m
             #If system never exceeds max force then continue.
         
         #Into 2-D List. Access via pop[i][j]
-        pop_new.append([kd_cur, kp_cur, ki_cur])
-    return pop_new
+        y_out = solga.y[0, :]
+        t_out = solga.t
+        err_val = 0.0
+        for y in range(len(t_out)) :
+            err_val = err_val + abs(set_interp(t_out[y]) - y_out[y])  
+
+        fit_val.insert(s, err_val)
+        pop_new.insert(s, [kd_cur, kp_cur, ki_cur])
+    return pop_new, fit_val, len_preRandom
 
 def fit_sort(pop, fit_val):
     #This sorts the population into descending fitness (ascending order)
@@ -374,6 +389,7 @@ c = 5 # Ns/m - damping coefficient
 k = 10 # N/m  - spring coefficient
 pop_num = 60    #How large the initial population is
 pop = []
+fit_val = []
 mut_prob = 0.08  #probability for mutation set here
 dt = 0.02
 iteration_max = 60 #Total number of iterations and generations set here
@@ -389,7 +405,7 @@ ki_min, ki_max = 0, 900
 
 def setpoint(t):
     if (t >= 0 and t < 1) or (t>=5 and t<6) or (t>=10 and t<11) or (t>=15 and t<16):
-            r = 0
+            r = 1
     elif (t >= 1 and t < 2) or (t>=6 and t<7) or (t>=11 and t<12) or (t>=16 and t<17):
             r = 1
     elif (t >= 2 and t < 3) or (t>=7 and t<8) or (t>=12 and t<13) or (t>=17 and t<18):
@@ -401,6 +417,7 @@ def setpoint(t):
     else:
             r = 0
     return r
+
 
 
 tempo = np.linspace(0, 20, 20*10)
@@ -419,21 +436,23 @@ iteration = 0
 while iteration < iteration_max:
     print("Iteration: ", iteration)
     if iteration == 0:
-        pop = create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
-        fit_val = fitness(pop)
+        pop, fit_val = create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max, fit_val)
         iteration = iteration + 1
 
     if iteration < iteration_max and iteration > 0:
         pop, fit_val = fit_sort(pop, fit_val)
-        pop = create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
-        fit_val = fitness(pop)
+        pop, fit_val, a = create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
+        pop_newfit = []
+        for g in range(a):
+            pop_newfit.append(pop[g])
+        fit_val = fitness(pop_newfit, fit_val)
         iteration = iteration + 1
+        print("Population number: ", len(pop))
 
 
 
 """This is the final section with the top solution being chosen and used"""
 #Final simulation run
-fit_val = fitness(pop)
 pop, fit_val = fit_sort(pop, fit_val)
 print("Top overall Coefficients: kd = ", pop[0][0], "  kp = ", pop[0][1], "  ki = ", pop[0][2])
 print("Fitness value of top performing member: ", round(fit_val[0], 4))

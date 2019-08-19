@@ -40,6 +40,8 @@ def create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
 
                 u = Kp * (r - y) + Ki * yi - Kd * dydt         #PID output
                 if abs(u) > force_constraint:
+                    print("u, t: ", u, t)
+                    print(Kp, Ki, Kd)
                     flag = True
 
 
@@ -257,7 +259,7 @@ def mutate(pop, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max) :
                 if flag == True:
                     #Mutation reduction of biggest contributing factor
                     if kpbig >= kibig and kpbig >= kdbig:
-                        pop_curr[i][1] = rouund(pop_curr[i][1] * 0.99,2)
+                        pop_curr[i][1] = round(pop_curr[i][1] * 0.99,2)
                     elif kibig > kpbig and kibig >= kdbig:
                         pop_curr[i][2] = round(pop_curr[i][2] * 0.99,2)
                     elif kdbig > kibig and kdbig > kpbig:

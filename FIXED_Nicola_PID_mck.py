@@ -21,7 +21,7 @@ def Log(a):
 def Tanh(a):
     return np.tanh(a)
 
-
+#"""
 def setpoint(t):
     if (t > 0 and t < 4):
             r = 2
@@ -37,16 +37,20 @@ def setpoint(t):
     return r
 
 tempo = np.linspace(0, 20, 20*5)
-rise_time = 0.1
 set_point=[]
 for items in tempo:
     set_point.append(setpoint(items))
-
+#"""
+"""
+tempo = np.linspace(0, 20, 20*10)
+set_point = np.sin(tempo)
+#"""
 set_interp = PchipInterpolator(tempo, set_point)
 
 a0 = 1  # M  [Kg]
 a1 = 10  # C  [Ns/m]
 a2 = 20  # K  [N/m]
+rise_time = 0.1
 r_max = np.amax(set_point)
 r_min = np.amin(set_point)
 ar = 2 * r_max / (rise_time ** 2)
@@ -62,6 +66,8 @@ def sys2PID(t,x):
     Kd = 14.76 # Derivative Gain
     #Time to complete: 113.72mins
     #Fitness: 46.3401
+    #SinFitness: 32.8507
+    #Sin Force Constraint 417.95 - No Breaches
 
     r=set_interp(t)
 
@@ -86,7 +92,9 @@ def sys2PID(t,x):
 def sys2GP(t,x):
     global force_constraint
     r=set_interp(t)
-
+    #Fitness: 30.0561
+    #SinFitness: 66.4221
+    #Sin Force Constraint 417.95 - No Breaches
     #State Variables
     y = x[0]            # x1 POSITION
     d_err = x[1]         # x2 VELOCITY
@@ -122,11 +130,15 @@ tga = solga.t
 err_val = 0.0
 for y in range(len(tga)) :
     err_val = err_val + abs(set_interp(tga[y]) - yga[y])
-print("Fitness value of top performing member: ", round(err_val, 4))
+print("Fitness value of GA Tuned PID: ", round(err_val, 4))
 
 solgp = solve_ivp(sys2GP, [0, 20], x_ini, t_eval=tev)
 ygp = solgp.y[0, :]
 tgp = solgp.t
+err_val_gp = 0.0
+for y in range(len(tgp)) :
+    err_val_gp = err_val_gp + abs(set_interp(tgp[y]) - ygp[y])
+print("Fitness value of GP controller: ", round(err_val_gp, 4))
 
 plt.title("Response Comparison Between GA Tuned PID Controller and GP Controller")
 plt.xlabel("Time [s]")
@@ -134,8 +146,7 @@ plt.ylabel("Amplitude [m]")
 plt.plot(tga,yga,label="Mass Position with GA controller [m]")
 plt.plot(tgp,ygp,label="Mass Position with GP controller [m]")
 plt.plot(tempo,set_point,"r--",label="Setpoint Command [m]")
-#plt.plot(t,y_dot,label='velocity [m/s]')
-#plt.plot(t_acc,acc,label='acceleration [m/s^2]')
+plt.xticks(np.arange(0, 20.5, step=1))
 plt.legend()
 plt.grid()
 plt.show()

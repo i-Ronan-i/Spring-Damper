@@ -175,7 +175,7 @@ ki_min, ki_max = 0, 900
 
 def setpoint(t):
     if (t >= 0 and t < 1) or (t>=5 and t<6) or (t>=10 and t<11) or (t>=15 and t<16):
-            r = 0
+            r = 1
     elif (t >= 1 and t < 2) or (t>=6 and t<7) or (t>=11 and t<12) or (t>=16 and t<17):
             r = 1
     elif (t >= 2 and t < 3) or (t>=7 and t<8) or (t>=12 and t<13) or (t>=17 and t<18):
@@ -203,13 +203,14 @@ while iteration < iteration_max:
     if iteration == 0:
         pop = create_initial(pop_num, pop, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
         fit_val = fitness(pop)
-        iteration = iteration + 1
-
+    
     if iteration < iteration_max and iteration > 0:
         pop, fit_val = fit_sort(pop, fit_val)
         pop = create_next_generation(pop, pop_num, fit_val, mut_prob, kd_min, kd_max, kp_min, kp_max, ki_min, ki_max)
         fit_val = fitness(pop)
-        iteration = iteration + 1
+        
+    iteration = iteration + 1
+
 
 """This is the final section with the top solution being chosen and used"""
 #Final simulation run
